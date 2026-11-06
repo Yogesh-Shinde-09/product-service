@@ -1,0 +1,54 @@
+# How many instances of the container should be running
+# Self healing, automation
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service-deployment
+  labels:
+    app: product-service
+spec:
+  replicas: 2   # two live copies for high availability
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+        - name: node-product-service
+          image: <username>/product-service:1.0
+          ports:
+            - containerPort: 3500
+          # restarts the container if it stops responding
+          livenessProbe:
+            httpGet:
+              path: /kubeconn
+              port: 3500
+            initialDelaySeconds: 5
+          # sends traffic only when the app is ready
+          readinessProbe:
+            httpGet:
+              path: /kubeconn
+              port: 3500
+            initialDelaySeconds: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service-cluster
+spec:
+  type: ClusterIP
+  selector:
+    app: product-service
+  ports:
+    - port: 80
+      targetPort: 3500
