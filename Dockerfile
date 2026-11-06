@@ -4,7 +4,7 @@ WORKDIR /productms/src/app
 
 COPY     package*.json ./
 
-RUM  npm i --only=production
+RUN npm install --omit=dev
 
 COPY . .
 EXPOSE 3500
